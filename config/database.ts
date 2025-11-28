@@ -1,60 +1,35 @@
-import path from 'path';
+// config/database.js
 
-export default ({ env }) => {
-  const client = env('DATABASE_CLIENT', 'sqlite');
+const { parse } = require('pg-connection-string'); // <--- CRITICAL: Make sure this line exists!
 
-  const connections = {
-    mysql: {
+module.exports = ({ env }) => {
+  const connectionString = env('DATABASE_URL');
+
+  if (connectionString) {
+    const config = parse(connectionString);
+
+    return {
       connection: {
-        host: env('DATABASE_HOST', 'localhost'),
-        port: env.int('DATABASE_PORT', 3306),
-        database: env('DATABASE_NAME', 'strapi'),
-        user: env('DATABASE_USERNAME', 'strapi'),
-        password: env('DATABASE_PASSWORD', 'strapi'),
-        ssl: env.bool('DATABASE_SSL', false) && {
-          key: env('DATABASE_SSL_KEY', undefined),
-          cert: env('DATABASE_SSL_CERT', undefined),
-          ca: env('DATABASE_SSL_CA', undefined),
-          capath: env('DATABASE_SSL_CAPATH', undefined),
-          cipher: env('DATABASE_SSL_CIPHER', undefined),
-          rejectUnauthorized: env.bool('DATABASE_SSL_REJECT_UNAUTHORIZED', true),
+        client: 'postgres', // <--- This must be 'postgres'
+        connection: {
+          host: config.host,
+          port: config.port,
+          database: config.database,
+          user: config.user,
+          password: config.password,
+          // Neon requires SSL. rejectUnauthorized: false is common for self-signed certs.
+          ssl: env.bool('DATABASE_SSL', true) ? { rejectUnauthorized: false } : false, 
         },
+        acquireConnectionTimeout: env.int('DATABASE_CONNECTION_TIMEOUT', 60000),
       },
-      pool: { min: env.int('DATABASE_POOL_MIN', 2), max: env.int('DATABASE_POOL_MAX', 10) },
-    },
-    postgres: {
-      connection: {
-        connectionString: env('DATABASE_URL'),
-        host: env('DATABASE_HOST', 'localhost'),
-        port: env.int('DATABASE_PORT', 5432),
-        database: env('DATABASE_NAME', 'strapi'),
-        user: env('DATABASE_USERNAME', 'strapi'),
-        password: env('DATABASE_PASSWORD', 'strapi'),
-        ssl: env.bool('DATABASE_SSL', false) && {
-          key: env('DATABASE_SSL_KEY', undefined),
-          cert: env('DATABASE_SSL_CERT', undefined),
-          ca: env('DATABASE_SSL_CA', undefined),
-          capath: env('DATABASE_SSL_CAPATH', undefined),
-          cipher: env('DATABASE_SSL_CIPHER', undefined),
-          rejectUnauthorized: env.bool('DATABASE_SSL_REJECT_UNAUTHORIZED', true),
-        },
-        schema: env('DATABASE_SCHEMA', 'public'),
-      },
-      pool: { min: env.int('DATABASE_POOL_MIN', 2), max: env.int('DATABASE_POOL_MAX', 10) },
-    },
-    sqlite: {
-      connection: {
-        filename: path.join(__dirname, '..', '..', env('DATABASE_FILENAME', '.tmp/data.db')),
-      },
-      useNullAsDefault: true,
-    },
-  };
+    };
+  }
 
+  // Fallback (We don't use this, but it must be present for the file to be valid)
   return {
     connection: {
-      client,
-      ...connections[client],
-      acquireConnectionTimeout: env.int('DATABASE_CONNECTION_TIMEOUT', 60000),
+      client: env('DATABASE_CLIENT', 'sqlite'), // NOTE: If DATABASE_URL fails, it might fall back to 'sqlite' here
+      filename: env('DATABASE_FILENAME', '.tmp/data.db'),
     },
   };
 };
