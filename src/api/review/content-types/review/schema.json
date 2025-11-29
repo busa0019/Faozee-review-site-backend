@@ -11,24 +11,23 @@
   },
   "pluginOptions": {},
   "attributes": {
-    "Title": {
+    "title": {
       "type": "string",
       "required": true
     },
-    "Slug": {
+    "slug": {
       "type": "uid",
-      "targetField": "Title",
       "required": true
     },
-    "Category": {
+    "category": {
       "type": "string",
       "required": true
     },
-    "Rating": {
+    "rating": {
       "type": "decimal",
       "required": true
     },
-    "Reviewer": {
+    "reviewer": {
       "type": "string",
       "required": true
     },
@@ -43,15 +42,15 @@
         "audios"
       ]
     },
-    "Summary": {
+    "summary": {
       "type": "text",
       "required": true
     },
-    "Content": {
+    "content": {
       "type": "blocks",
       "required": true
     },
-    "Date": {
+    "date": {
       "type": "date",
       "required": true
     }
